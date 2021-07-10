@@ -7,6 +7,8 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+//TODO generate default property file
+//TODO store properties in config folder
 @Mod(modid = BackupRestorer.MODID,
         name = BackupRestorer.NAME,
         version = BackupRestorer.VERSION,
