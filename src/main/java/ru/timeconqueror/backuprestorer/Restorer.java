@@ -91,14 +91,13 @@ public class Restorer {
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             /*TODO how to handle nicks, which can contain other nicks*/
-            System.out.println(entry.getName());
             if (entry.getName().contains("playerdata/") &&
                     (entry.getName().contains(userName) || entry.getName().contains(uuid))) {
                 InputStream stream = zipBackup.getInputStream(entry);
 
                 String pathTo = entry.getName().substring(worldDir.getName().length() + 1 /*this is '/'*/);
                 BackupRestorer.LOGGER.info("Copying {}...", pathTo);
-                FileWriter fileTo = new FileWriter(pathTo);
+                FileWriter fileTo = new FileWriter(new File(worldDir, pathTo));
                 IOUtils.copy(stream, fileTo);
 
                 fileTo.close();
