@@ -34,6 +34,8 @@ minecraft {
     version = "1.7.10-10.13.4.1614-1.7.10"
     runDir = "eclipse"
 
+    mappings = "stable_12"
+
     replaceIn "src/main/java/ru/timeconqueror/backuprestorer/BackupRestorer.java"
     def versionArray = project.version.tokenize('-')
     replace "GRADLETOKEN_VERSION", versionArray.get(1)

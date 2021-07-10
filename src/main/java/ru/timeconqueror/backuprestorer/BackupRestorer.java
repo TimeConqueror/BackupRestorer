@@ -9,10 +9,11 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(modid = BackupRestorer.MODID,
         name = BackupRestorer.NAME,
-        version = BackupRestorer.VERSION)
+        version = BackupRestorer.VERSION,
+        acceptableRemoteVersions = "*")
 public class BackupRestorer {
-    public static final String MODID = "regionrestorer";
-    public static final String NAME = "Region Restorer";
+    public static final String MODID = "backuprestorer";
+    public static final String NAME = "Backup Restorer";
     public static final String VERSION = "GRADLETOKEN_VERSION";
 
     public static final Logger LOGGER = LogManager.getLogger(NAME);
@@ -22,6 +23,7 @@ public class BackupRestorer {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        Restorer.launch();
     }
 
     @Mod.EventHandler
