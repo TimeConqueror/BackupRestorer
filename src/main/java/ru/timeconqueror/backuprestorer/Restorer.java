@@ -1,11 +1,17 @@
 package ru.timeconqueror.backuprestorer;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import net.minecraft.world.chunk.storage.RegionFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.Properties;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Restorer {
@@ -14,6 +20,7 @@ public class Restorer {
     private Pos c2;
     private File backup;
     private File worldDir;
+    private String userName;
 
     public static void launch() {
         try {
@@ -36,10 +43,10 @@ public class Restorer {
             prepare(props);
             run();
 
-//            props.setProperty("go", "false");
-//            try (FileOutputStream out = new FileOutputStream(propFile)) {
-//                props.store(out, null);
-//            }
+            props.setProperty("go", "false");
+            try (FileOutputStream out = new FileOutputStream(propFile)) {
+                props.store(out, null);
+            }
         }
     }
 
@@ -54,11 +61,50 @@ public class Restorer {
         BackupRestorer.LOGGER.info("Backup zip: {}", backup);
         worldDir = new File(props.getProperty("worldDir"));
         BackupRestorer.LOGGER.info("World directory: {}", worldDir);
+
+        userName = props.getProperty("backupPlayer");
     }
 
     public void run() throws IOException {
         ZipFile zipBackup = new ZipFile(backup);
 
+        restoreChunks(zipBackup);
+        if (!(userName != null && !userName.isEmpty())) {
+            restorePlayer(userName, zipBackup);
+        }
+
+        zipBackup.close();
+        FileUtils.deleteDirectory(TEMP);
+
+        BackupRestorer.LOGGER.info("Finished restoring!");
+    }
+
+    private void restorePlayer(String userName, ZipFile zipBackup) throws IOException {
+        String uuid = getUuid(userName);
+        if (uuid == null) {
+            BackupRestorer.LOGGER.warn("Player with name '{}' not found in mojang API. Skipping restoring player data...", userName);
+            return;
+        }
+
+        Enumeration<? extends ZipEntry> entries = zipBackup.entries();
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = entries.nextElement();
+            /*TODO how to handle nicks, which can contain other nicks*/
+            if (entry.getName().contains("playerdata/") &&
+                    (entry.getName().contains(userName) || entry.getName().contains(uuid))) {
+                InputStream stream = zipBackup.getInputStream(entry);
+
+                String pathTo = entry.getName().substring(worldDir.getName().length() + 1 /*this is '/'*/);
+                FileWriter fileTo = new FileWriter(pathTo);
+                IOUtils.copy(stream, fileTo);
+
+                fileTo.close();
+                stream.close();
+            }
+        }
+    }
+
+    private void restoreChunks(ZipFile zipBackup) throws IOException {
         BackupRestorer.LOGGER.info("Changing {}x{} chunks...", (c2.x - c1.x), (c2.z - c1.z));
 
         for (int x = c1.x; x <= c2.x; x++) {
@@ -70,7 +116,7 @@ public class Restorer {
                 DataInputStream fromS = from.getChunkDataInputStream(x, z);
                 DataOutputStream toS = to.getChunkDataOutputStream(x, z);
 
-                System.out.println("IOUtils.copy(fromS, toS) = " + IOUtils.copy(fromS, toS));
+                IOUtils.copy(fromS, toS);
 
                 fromS.close();
                 toS.close();
@@ -78,10 +124,20 @@ public class Restorer {
                 to.close();
             }
         }
+    }
 
-        zipBackup.close();
-        FileUtils.deleteDirectory(TEMP);
+    @Nullable
+    public String getUuid(String name) {
+        String url = "https://api.mojang.com/users/profiles/minecraft/" + name;
+        try {
+            String json = IOUtils.toString(new URL(url));
+            if (json.isEmpty()) return "invalid name";
+            JsonObject obj = new Gson().fromJson(json, JsonObject.class);
+            return obj.get("id").getAsString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        BackupRestorer.LOGGER.info("Finished restoring!");
+        return null;
     }
 }

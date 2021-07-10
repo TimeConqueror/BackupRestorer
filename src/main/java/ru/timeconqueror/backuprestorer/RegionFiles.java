@@ -16,12 +16,7 @@ public class RegionFiles {
         String fileName = "r." + (p_76550_1_ >> 5) + "." + (p_76550_2_ >> 5) + ".mca";
         File tempRegionFile = new File(Restorer.TEMP, fileName);
         if(!tempRegionFile.exists()) {
-            Enumeration<? extends ZipEntry> entries = file.entries();
-            while (entries.hasMoreElements()) {
-                ZipEntry zipEntry = entries.nextElement();
-                System.out.println("zipEntry.getName() = " + zipEntry.getName());
-            }
-            ZipEntry entry = file.getEntry(worldName + "/region/" + fileName);
+            ZipEntry entry = file.getEntry(worldName + "/region/" + fileName);//TODO should handle cases when chunks are not present in backup
 
             InputStream zipIn = file.getInputStream(entry);
             FileUtils.copyInputStreamToFile(zipIn, tempRegionFile);
