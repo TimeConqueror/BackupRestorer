@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "backuprestorer",
+    "name": "Backup Restorer",
+    "description": "Allows you to restore sfuff from backups.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "Time_Conqueror"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
