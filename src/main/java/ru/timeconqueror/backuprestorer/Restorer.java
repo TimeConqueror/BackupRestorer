@@ -38,12 +38,12 @@ public class Restorer {
         props.load(stream);
         stream.close();
 
-        if (!props.getProperty("go").equals("false")) {
+        if (!props.getProperty("shouldBeRun").equals("false")) {
             BackupRestorer.LOGGER.info("Detected needing of restoring. Launching...");
             prepare(props);
             run();
 
-            props.setProperty("go", "false");
+            props.setProperty("shouldBeRun", "false");
             try (FileOutputStream out = new FileOutputStream(propFile)) {
                 props.store(out, null);
             }
