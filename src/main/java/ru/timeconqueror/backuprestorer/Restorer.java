@@ -2,6 +2,7 @@ package ru.timeconqueror.backuprestorer;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.mojang.util.UUIDTypeAdapter;
 import net.minecraft.world.chunk.storage.RegionFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -11,6 +12,7 @@ import java.io.*;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -81,18 +83,20 @@ public class Restorer {
     }
 
     private void restorePlayer(String userName, ZipFile zipBackup) throws IOException {
-        String uuid = getUuid(userName);
-        if (uuid == null) {
+        String stringUUID = getUuid(userName);
+        if (stringUUID == null) {
             BackupRestorer.LOGGER.warn("Player with name '{}' not found in mojang API. Skipping restoring player data...", userName);
             return;
         }
+
+        UUID uuid = UUIDTypeAdapter.fromString(stringUUID);
 
         Enumeration<? extends ZipEntry> entries = zipBackup.entries();
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             /*TODO how to handle nicks, which can contain other nicks*/
             if (entry.getName().contains("playerdata/") &&
-                    (entry.getName().contains(userName) || entry.getName().contains(uuid))) {
+                    (entry.getName().contains(userName) || entry.getName().contains(stringUUID)) || entry.getName().contains(uuid.toString())) {
                 InputStream stream = zipBackup.getInputStream(entry);
 
                 String pathTo = entry.getName().substring(worldDir.getName().length() + 1 /*this is '/'*/);
