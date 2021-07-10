@@ -69,7 +69,8 @@ public class Restorer {
         ZipFile zipBackup = new ZipFile(backup);
 
         restoreChunks(zipBackup);
-        if (!(userName != null && !userName.isEmpty())) {
+        if (userName != null && !userName.isEmpty()) {
+            BackupRestorer.LOGGER.info("Requested to restore player data! Starting...");
             restorePlayer(userName, zipBackup);
         }
 
@@ -90,11 +91,13 @@ public class Restorer {
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             /*TODO how to handle nicks, which can contain other nicks*/
+            System.out.println(entry.getName());
             if (entry.getName().contains("playerdata/") &&
                     (entry.getName().contains(userName) || entry.getName().contains(uuid))) {
                 InputStream stream = zipBackup.getInputStream(entry);
 
                 String pathTo = entry.getName().substring(worldDir.getName().length() + 1 /*this is '/'*/);
+                BackupRestorer.LOGGER.info("Copying {}...", pathTo);
                 FileWriter fileTo = new FileWriter(pathTo);
                 IOUtils.copy(stream, fileTo);
 
@@ -105,7 +108,7 @@ public class Restorer {
     }
 
     private void restoreChunks(ZipFile zipBackup) throws IOException {
-        BackupRestorer.LOGGER.info("Changing {}x{} chunks...", (c2.x - c1.x), (c2.z - c1.z));
+        BackupRestorer.LOGGER.info("Changing {} chunks...", (c2.x - c1.x) * (c2.z - c1.z));
 
         for (int x = c1.x; x <= c2.x; x++) {
             for (int z = c1.z; z <= c2.z; z++) {
@@ -113,8 +116,8 @@ public class Restorer {
                 RegionFile from = RegionFiles.retrieveRegionFile(zipBackup, worldDir.getName(), x, z);
                 RegionFile to = RegionFiles.retrieveRegionFile(worldDir, x, z);
 
-                DataInputStream fromS = from.getChunkDataInputStream(x, z);
-                DataOutputStream toS = to.getChunkDataOutputStream(x, z);
+                DataInputStream fromS = RegionFiles.getChunkInputStream(from, x, z);
+                DataOutputStream toS = RegionFiles.getChunkOutputStream(to, x, z);
 
                 IOUtils.copy(fromS, toS);
 
